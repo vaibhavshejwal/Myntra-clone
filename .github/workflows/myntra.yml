@@ -6,7 +6,7 @@ on:
 jobs:
   test-build:
     name: Checkout
-    runs-on: [self-hosted, ip-172-31-4-213]
+    runs-on: self-hosted
 
     steps:
       - name: Checkout Code
@@ -17,7 +17,7 @@ jobs:
   code-analysis:
     name: Code Analysis
     needs: test-build
-    runs-on: [self-hosted, ip-172-31-4-213]
+    runs-on: self-hosted
 
     steps:
       - name: Checkout Code
@@ -35,7 +35,7 @@ jobs:
   build-push:
     name: Build and Push Image
     needs: code-analysis
-    runs-on: [self-hosted, ip-172-31-4-213]
+    runs-on: self-hosted
 
     steps:
       - name: Checkout Code
@@ -53,7 +53,7 @@ jobs:
   image-scan:
     name: Image Scan
     needs: build-push
-    runs-on: [self-hosted, ip-172-31-4-213]
+    runs-on: self-hosted
 
     steps:
       - name: Docker Scout scan
@@ -64,7 +64,7 @@ jobs:
   deploy:
     name: Deploy Application
     needs: image-scan
-    runs-on: [self-hosted, ip-172-31-4-213]
+    runs-on: self-hosted
 
     steps:
       - name: Run the container
