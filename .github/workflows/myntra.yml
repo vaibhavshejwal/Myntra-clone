@@ -5,30 +5,42 @@ on:
 
 jobs:
   test-build:
+    name: Checkout
     runs-on: [self-hosted, ip-172-31-4-213]
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-  Code-Analysis:
+  code-analysis:
+    name: Code Analysis
     needs: test-build
     runs-on: [self-hosted, ip-172-31-4-213]
+
     steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@master
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
-      - name: npm install
+      - name: Install dependencies
         run: npm install
 
-  Build-Push:
-    needs: Code-Analysis
+  build-push:
+    name: Build and Push Image
+    needs: code-analysis
     runs-on: [self-hosted, ip-172-31-4-213]
+
     steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
       - name: Docker login
         run: docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
 
@@ -37,11 +49,10 @@ jobs:
           docker build -t myntra .
           docker tag myntra vaibhavshejwal/myntra:latest
           docker push vaibhavshejwal/myntra:latest
-        env:
-            DOCKER_CLI_ACI: 1
 
   image-scan:
-    needs: Build-Push
+    name: Image Scan
+    needs: build-push
     runs-on: [self-hosted, ip-172-31-4-213]
 
     steps:
@@ -51,9 +62,12 @@ jobs:
           docker scout cves vaibhavshejwal/myntra:latest
 
   deploy:
+    name: Deploy Application
     needs: image-scan
     runs-on: [self-hosted, ip-172-31-4-213]
 
     steps:
       - name: Run the container
-        run: docker run -d --name myntra -p 3000:3000 vaibhavshejwal/myntra:latest
+        run: |
+          docker rm -f myntra || true
+          docker run -d --name myntra -p 3000:3000 vaibhavshejwal/myntra:latest
