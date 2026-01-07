@@ -30,7 +30,9 @@ jobs:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
       - name: Install dependencies
-        run: npm install
+        run: |
+            sudo apt install nodejs npm -y
+            npm install
 
   build-push:
     name: Build and Push Image
